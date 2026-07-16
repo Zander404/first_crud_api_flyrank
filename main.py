@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-
+from tasks.routes import router as tasks_routes
 
 app = FastAPI()
 
@@ -12,3 +12,6 @@ def home():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+app.include_router(router=tasks_routes)
