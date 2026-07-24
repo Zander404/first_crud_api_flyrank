@@ -2,23 +2,18 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, status
 
+from config.db import SessionDep
 from tasks.entities.dto.task_dto import TaskCreateDto, TaskUpdateDTO
 from tasks.entities.task import Task, TaskPublic
-
-
-task_list: List[Task] = [
-    Task(id=1, title="Task 1", done=True),
-    Task(id=2, title="Task 2", done=False),
-    Task(id=3, title="Task 3", done=True),
-]
+from sqlmodel import select
 
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
 
 @router.get("", response_model=List[Task], status_code=status.HTTP_200_OK)
-def get_all():
-    return task_list
+def get_all(session: SessionDep) -> list[Task]:
+    return session.exec(select(Task)).all()
 
 
 @router.get("/{id}", response_model=TaskPublic, status_code=status.HTTP_200_OK)
@@ -33,16 +28,16 @@ def get_one(id: int):
 
 
 @router.post("", response_model=TaskPublic, status_code=status.HTTP_201_CREATED)
-async def create_task(createDTO: TaskCreateDto):
+async def create_task(createDTO: TaskCreateDto, session: SessionDep):
 
     if not createDTO.title:
         raise HTTPException(status_code=400, detail="Task don't have a title!")
 
-    next_id: int = max([t.id for t in task_list], default=0) + 1
-    task = Task(id=next_id, done=False, **createDTO.model_dump())
-    task_list.append(task)
-
-    return task
+    task_data = Task.model_validate(createDTO)
+    session.add(task_data)
+    session.commit()
+    session.refresh(task_data)
+    return task_data
 
 
 @router.patch("/{id}", status_code=status.HTTP_202_ACCEPTED)

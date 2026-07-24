@@ -1,10 +1,10 @@
-from pydantic import BaseModel
+from sqlmodel import SQLModel, Field
 
 
-class TaskPublic(BaseModel):
-    title: str
-    done: bool = False
+class TaskPublic(SQLModel):
+    title: str | None = Field(index=True)
+    done: bool = Field(default=False)
 
 
-class Task(TaskPublic):
-    id: int
+class Task(TaskPublic, table=True):
+    id: int = Field(default=None, primary_key=True)
