@@ -34,6 +34,7 @@ async def create_task(createDTO: TaskCreateDto, session: SessionDep):
         raise HTTPException(status_code=400, detail="Task don't have a title!")
 
     task_data = Task.model_validate(createDTO)
+
     session.add(task_data)
     session.commit()
     session.refresh(task_data)
