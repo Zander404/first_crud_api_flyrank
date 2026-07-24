@@ -17,12 +17,12 @@ def get_all(session: SessionDep) -> list[Task]:
 
 
 @router.get("/{id}", response_model=TaskPublic, status_code=status.HTTP_200_OK)
-def get_one(id: int):
+def get_one(id: int, session: SessionDep):
 
-    task = next((t for t in task_list if t.id == id), None)
+    task = session.get(Task, id)
 
     if not task:
-        return {"error": f"Task {id} not found"}
+        raise HTTPException(status_code=404, detail=f"Task {id} not found")
 
     return task
 
