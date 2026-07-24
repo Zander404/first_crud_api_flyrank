@@ -19,7 +19,7 @@ def get_all(session: SessionDep) -> list[Task]:
 @router.get("/{id}", response_model=TaskPublic, status_code=status.HTTP_200_OK)
 def get_one(id: int, session: SessionDep):
 
-    task = session.get(Task, id)
+    task = session.get_one(Task, id)
 
     if not task:
         raise HTTPException(status_code=404, detail=f"Task {id} not found")
@@ -42,11 +42,11 @@ async def create_task(createDTO: TaskCreateDto, session: SessionDep):
 
 
 @router.patch("/{id}", status_code=status.HTTP_202_ACCEPTED)
-async def update_task(id: int, updateDTO: TaskUpdateDTO):
+async def update_task(id: int, updateDTO: TaskUpdateDTO, session: SessionDep):
 
-    task = next((t for t in task_list if t.id == id), None)
+    task_db = session.get_one(Task, id)
 
-    if not task:
+    if not task_db:
         raise HTTPException(status_code=404, detail=f"Task with {id} not found!")
 
     update_data = updateDTO.model_dump(exclude_unset=True)
@@ -54,25 +54,24 @@ async def update_task(id: int, updateDTO: TaskUpdateDTO):
     if "title" in update_data and not update_data["title"].strip():
         raise HTTPException(status_code=400, detail="Title cannot be empty!")
 
-    task_dict = task.model_dump()
+    task_db.sqlmodel_update(update_data)
 
-    task_dict.update(update_data)
+    session.add(task_db)
+    session.commit()
+    session.refresh(task_db)
 
-    updated_task = Task(**task_dict)
-
-    index = task_list.index(task)
-
-    task_list[index] = updated_task
-
-    return update_data
+    return task_db
 
 
 @router.delete("{id}", status_code=204)
-def delete_task(id: int):
+def delete_task(id: int, session: SessionDep):
 
-    task = next((t for t in task_list if t.id == id), None)
+    task = session.get_one(Task, id)
 
     if not task:
         raise HTTPException(status_code=404, detail=f"Task with {id} not found!")
 
-    return task_list.remove(task)
+    session.delete(task)
+    session.commit()
+
+    return
