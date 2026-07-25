@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel
-from tasks.entities.task import TaskPublic
+from app.tasks.entities.task import TaskPublic
 
 
 class TaskCreateDto(TaskPublic):

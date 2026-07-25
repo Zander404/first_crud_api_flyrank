@@ -2,9 +2,9 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, status
 
-from config.db import SessionDep
-from tasks.entities.dto.task_dto import TaskCreateDto, TaskUpdateDTO
-from tasks.entities.task import Task, TaskPublic
+from app.config.db import SessionDep
+from app.tasks.entities.dto.task_dto import TaskCreateDto, TaskUpdateDTO
+from app.tasks.entities.task import Task, TaskPublic
 from sqlmodel import select
 
 
